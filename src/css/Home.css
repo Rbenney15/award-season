@@ -1,3 +1,77 @@
+.home {
+    /* ✅ full width feel again */
+    width: 100%;
+    box-sizing: border-box;
+
+    /* nice breathing room on desktop */
+    padding: 2rem clamp(1rem, 4vw, 3rem);
+
+    /* no forced narrow column */
+    max-width: none;
+    margin: 0;
+}
+
+.home-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.home h1 {
+    margin: 0;
+    font-size: 1.75rem;
+    line-height: 1.2;
+}
+
+.subtitle {
+    margin-top: 0.35rem;
+    opacity: 0.85;
+}
+
+.loading {
+    padding: 1rem 0;
+}
+
+.error-message {
+    background: rgba(229, 9, 20, 0.15);
+    border: 1px solid rgba(229, 9, 20, 0.35);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin: 0 0 1rem 0;
+}
+
+.success-message {
+    background: rgba(0, 200, 120, 0.12);
+    border: 1px solid rgba(0, 200, 120, 0.28);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin: 0 0 1rem 0;
+}
+
+/* User switcher */
+.user-switcher {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 220px;
+}
+
+.user-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.user-select {
+    padding: 0.55rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.2);
+    color: inherit;
+}
+
+/* Step 2 progress bar */
 .progress-bar {
     display: flex;
     align-items: flex-start;
@@ -23,23 +97,7 @@
     justify-content: flex-end;
 }
 
-.btn-primary {
-    background: rgba(229, 9, 20, 0.85);
-    border-color: rgba(229, 9, 20, 0.85);
-}
-
-.btn-primary:hover {
-    background: rgba(229, 9, 20, 1);
-}
-
-.success-message {
-    background: rgba(0, 200, 120, 0.12);
-    border: 1px solid rgba(0, 200, 120, 0.28);
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    margin: 0 0 1rem 0;
-}
-
+/* Status pills */
 .status-pill {
     display: inline-block;
     margin-left: 0.6rem;
@@ -59,7 +117,196 @@
     border-color: rgba(255, 255, 255, 0.18);
 }
 
+/* Accordion */
+.accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.accordion-item {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.accordion-header {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: inherit;
+    text-align: left;
+}
+
+.accordion-header:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.accordion-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Want/Will summary pills inside header */
+.accordion-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.pill {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0.85;
+    max-width: 420px;
+    /* ✅ a bit wider on desktop */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pill.set {
+    opacity: 1;
+}
+
+.accordion-indicator {
+    font-size: 1.25rem;
+    line-height: 1;
+    opacity: 0.85;
+}
+
+.accordion-panel {
+    padding: 0 1rem 1rem 1rem;
+}
+
+/* Category actions */
+.category-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}
+
+/* Nominees */
+.nominee-list {
+    list-style: none;
+    padding: 0.75rem 0 0 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.nominee {
+    padding: 0.75rem 0.85rem;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nominee-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.nominee-text {
+    min-width: 0;
+}
+
+.nominee-primary {
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+.nominee-secondary {
+    margin-top: 0.25rem;
+    opacity: 0.85;
+    font-size: 0.95rem;
+    line-height: 1.25;
+}
+
+.nominee.missing {
+    border-color: rgba(229, 9, 20, 0.35);
+    background: rgba(229, 9, 20, 0.10);
+}
+
+/* Buttons */
+.btn {
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: inherit;
+    padding: 0.45rem 0.7rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.05s, background 0.15s;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.10);
+}
+
+.btn:active {
+    transform: translateY(1px);
+}
+
+.btn-secondary {
+    opacity: 0.95;
+}
+
+.btn-primary {
+    background: rgba(229, 9, 20, 0.85);
+    border-color: rgba(229, 9, 20, 0.85);
+}
+
+.btn-primary:hover {
+    background: rgba(229, 9, 20, 1);
+}
+
+/* Pick buttons */
+.pick-buttons {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.btn-pick.selected {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+.btn-pick.selected.want {
+    outline: 2px solid rgba(0, 200, 120, 0.35);
+}
+
+.btn-pick.selected.will {
+    outline: 2px solid rgba(0, 140, 255, 0.35);
+}
+
+/* Mobile */
 @media (max-width: 760px) {
+    .home-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-switcher {
+        min-width: auto;
+    }
+
     .progress-bar {
         flex-direction: column;
         align-items: stretch;
@@ -67,5 +314,28 @@
 
     .progress-actions {
         justify-content: flex-start;
+    }
+
+    .accordion-header {
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto;
+    }
+
+    .accordion-meta {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+
+    .nominee-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pick-buttons {
+        justify-content: flex-start;
+    }
+
+    .pill {
+        max-width: 100%;
     }
 }

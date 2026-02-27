@@ -13,22 +13,10 @@ const USERS = [
 ];
 
 const ACTIVE_USER_KEY = `award_season_active_user_${YEAR}`;
-const PICKS_KEY = `award_season_picks_${YEAR}`;
 
-// Step 2 keys
-const FINALIZED_KEY = `award_season_finalized_${YEAR}`;
-
-/**
- * Picks shape (stored in localStorage):
- * {
- *   [userId]: {
- *     [categoryId]: { want: nominationId|null, will: nominationId|null }
- *   }
- * }
- *
- * Finalized shape:
- * { [userId]: boolean }
- */
+const picksKeyForUser = (userId) => `award_season_picks_${YEAR}_${userId}`;
+const finalizedKeyForUser = (userId) =>
+  `award_season_finalized_${YEAR}_${userId}`;
 
 function readJson(key, fallback) {
   try {
@@ -48,16 +36,20 @@ function Home() {
   const [openCategoryId, setOpenCategoryId] = useState(null);
 
   const [activeUserId, setActiveUserId] = useState(USERS[0].id);
-  const [picksByUser, setPicksByUser] = useState({});
-  const [finalizedByUser, setFinalizedByUser] = useState({});
 
-  // ✅ prevents overwriting storage on first render
-  const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
+  // ✅ picks for ACTIVE user only:
+  // { [categoryId]: { want: string|null, will: string|null } }
+  const [picksByCategory, setPicksByCategory] = useState({});
+
+  // ✅ finalized for ACTIVE user only:
+  const [isFinalized, setIsFinalized] = useState(false);
+
+  // prevents overwriting before first load
+  const [hasLoadedUserState, setHasLoadedUserState] = useState(false);
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Step 2 UI state
   const [finalizeError, setFinalizeError] = useState(null);
   const [finalizeSuccess, setFinalizeSuccess] = useState(false);
 
@@ -79,43 +71,41 @@ function Home() {
     loadOscars();
   }, []);
 
-  // ✅ Load localStorage ONCE (active user + picks + finalized)
+  // Load active user from localStorage once
   useEffect(() => {
     const storedActiveUser = localStorage.getItem(ACTIVE_USER_KEY);
     if (storedActiveUser) setActiveUserId(storedActiveUser);
-
-    const storedPicks = readJson(PICKS_KEY, {});
-    setPicksByUser(storedPicks);
-
-    const storedFinalized = readJson(FINALIZED_KEY, {});
-    setFinalizedByUser(storedFinalized);
-
-    setHasLoadedStorage(true);
   }, []);
 
-  // Persist active user (only after storage is loaded)
+  // Whenever active user changes:
+  // 1) persist active user id
+  // 2) load that user's picks + finalized state
   useEffect(() => {
-    if (!hasLoadedStorage) return;
     localStorage.setItem(ACTIVE_USER_KEY, activeUserId);
-  }, [activeUserId, hasLoadedStorage]);
 
-  // Persist picks (only after storage is loaded)
-  useEffect(() => {
-    if (!hasLoadedStorage) return;
-    writeJson(PICKS_KEY, picksByUser);
-  }, [picksByUser, hasLoadedStorage]);
+    const loadedPicks = readJson(picksKeyForUser(activeUserId), {});
+    setPicksByCategory(loadedPicks);
 
-  // Persist finalized (only after storage is loaded)
-  useEffect(() => {
-    if (!hasLoadedStorage) return;
-    writeJson(FINALIZED_KEY, finalizedByUser);
-  }, [finalizedByUser, hasLoadedStorage]);
+    const loadedFinalized = readJson(finalizedKeyForUser(activeUserId), false);
+    setIsFinalized(Boolean(loadedFinalized));
 
-  // Clear success banner when switching users
-  useEffect(() => {
     setFinalizeSuccess(false);
     setFinalizeError(null);
+
+    setHasLoadedUserState(true);
   }, [activeUserId]);
+
+  // Persist picks for active user (only after their state is loaded)
+  useEffect(() => {
+    if (!hasLoadedUserState) return;
+    writeJson(picksKeyForUser(activeUserId), picksByCategory);
+  }, [picksByCategory, activeUserId, hasLoadedUserState]);
+
+  // Persist finalized for active user
+  useEffect(() => {
+    if (!hasLoadedUserState) return;
+    writeJson(finalizedKeyForUser(activeUserId), isFinalized);
+  }, [isFinalized, activeUserId, hasLoadedUserState]);
 
   const nominationById = useMemo(() => {
     const map = new Map();
@@ -138,33 +128,22 @@ function Home() {
   const activeUserName =
     USERS.find((u) => u.id === activeUserId)?.name ?? "Unknown";
 
-  const isFinalized = Boolean(finalizedByUser?.[activeUserId]);
-
   const getCategoryPicks = (categoryId) => {
-    return (
-      picksByUser?.[activeUserId]?.[categoryId] ?? { want: null, will: null }
-    );
+    return picksByCategory?.[categoryId] ?? { want: null, will: null };
   };
 
   const setPick = (categoryId, kind, nominationId) => {
-    if (isFinalized) return; // locked once finalized
+    if (isFinalized) return;
 
-    // kind: "want" | "will"
-    setPicksByUser((prev) => {
-      const prevUser = prev[activeUserId] ?? {};
-      const prevCat = prevUser[categoryId] ?? { want: null, will: null };
+    setPicksByCategory((prev) => {
+      const prevCat = prev[categoryId] ?? { want: null, will: null };
       const current = prevCat[kind];
-
-      const nextCat = {
-        ...prevCat,
-        [kind]: current === nominationId ? null : nominationId,
-      };
 
       return {
         ...prev,
-        [activeUserId]: {
-          ...prevUser,
-          [categoryId]: nextCat,
+        [categoryId]: {
+          ...prevCat,
+          [kind]: current === nominationId ? null : nominationId,
         },
       };
     });
@@ -173,16 +152,10 @@ function Home() {
   const clearCategory = (categoryId) => {
     if (isFinalized) return;
 
-    setPicksByUser((prev) => {
-      const prevUser = prev[activeUserId] ?? {};
-      return {
-        ...prev,
-        [activeUserId]: {
-          ...prevUser,
-          [categoryId]: { want: null, will: null },
-        },
-      };
-    });
+    setPicksByCategory((prev) => ({
+      ...prev,
+      [categoryId]: { want: null, will: null },
+    }));
   };
 
   const labelForNomination = (nomId) => {
@@ -197,14 +170,11 @@ function Home() {
     if (!data?.categories) return [];
     const remaining = [];
     for (const cat of data.categories) {
-      const picks = picksByUser?.[activeUserId]?.[cat.id] ?? {
-        want: null,
-        will: null,
-      };
+      const picks = picksByCategory?.[cat.id] ?? { want: null, will: null };
       if (!picks.want || !picks.will) remaining.push(cat.id);
     }
     return remaining;
-  }, [data, picksByUser, activeUserId]);
+  }, [data, picksByCategory]);
 
   const remainingCount = remainingCategoryIds.length;
 
@@ -219,27 +189,22 @@ function Home() {
 
     if (remainingCount > 0) {
       setFinalizeError(
-        `You still have ${remainingCount} categorie${remainingCount === 1 ? "" : "s"} left to complete.`,
+        `You still have ${remainingCount} categorie${
+          remainingCount === 1 ? "" : "s"
+        } left to complete.`,
       );
       openFirstIncomplete();
       return;
     }
 
-    setFinalizedByUser((prev) => ({
-      ...prev,
-      [activeUserId]: true,
-    }));
+    setIsFinalized(true);
     setFinalizeSuccess(true);
   };
 
   const handleUnfinalize = () => {
     setFinalizeSuccess(false);
     setFinalizeError(null);
-
-    setFinalizedByUser((prev) => ({
-      ...prev,
-      [activeUserId]: false,
-    }));
+    setIsFinalized(false);
   };
 
   return (
@@ -276,7 +241,7 @@ function Home() {
         </div>
       </div>
 
-      {/* Step 2: Progress + Finalize */}
+      {/* Progress + Finalize */}
       {!loading && !error && (
         <div className="progress-bar">
           <div className="progress-left">
