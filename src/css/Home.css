@@ -1,129 +1,71 @@
-.home {
-    padding: 2rem 1rem;
-    width: 100%;
-    box-sizing: border-box;
-    max-width: 960px;
-    margin: 0 auto;
+.progress-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    margin-bottom: 0.85rem;
 }
 
-.home h1 {
-    margin: 0 0 1.25rem 0;
-    font-size: 1.75rem;
-    line-height: 1.2;
+.progress-hint {
+    margin-top: 0.35rem;
+    opacity: 0.85;
+    font-size: 0.92rem;
 }
 
-.loading {
-    padding: 1rem 0;
+.progress-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
-.error-message {
-    background: rgba(229, 9, 20, 0.15);
-    border: 1px solid rgba(229, 9, 20, 0.35);
+.btn-primary {
+    background: rgba(229, 9, 20, 0.85);
+    border-color: rgba(229, 9, 20, 0.85);
+}
+
+.btn-primary:hover {
+    background: rgba(229, 9, 20, 1);
+}
+
+.success-message {
+    background: rgba(0, 200, 120, 0.12);
+    border: 1px solid rgba(0, 200, 120, 0.28);
     padding: 0.75rem 1rem;
     border-radius: 10px;
     margin: 0 0 1rem 0;
 }
 
-/* Accordion */
-.accordion {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.status-pill {
+    display: inline-block;
+    margin-left: 0.6rem;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(0, 0, 0, 0.2);
+    opacity: 0.9;
 }
 
-.accordion-item {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    overflow: hidden;
-    background: rgba(255, 255, 255, 0.04);
+.status-pill.locked {
+    border-color: rgba(0, 140, 255, 0.35);
 }
 
-.accordion-header {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.9rem 1rem;
-    cursor: pointer;
-    background: transparent;
-    border: none;
-    color: inherit;
-    text-align: left;
+.status-pill.editing {
+    border-color: rgba(255, 255, 255, 0.18);
 }
 
-.accordion-header:hover {
-    background: rgba(255, 255, 255, 0.06);
-}
-
-.accordion-title {
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-.accordion-indicator {
-    font-size: 1.25rem;
-    line-height: 1;
-    opacity: 0.85;
-}
-
-.accordion-panel {
-    padding: 0 1rem 1rem 1rem;
-}
-
-/* Nominees */
-.nominee-list {
-    list-style: none;
-    padding: 0.25rem 0 0 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.nominee {
-    padding: 0.75rem 0.85rem;
-    border-radius: 10px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.nominee-primary {
-    font-weight: 600;
-    font-size: 1rem;
-    line-height: 1.25;
-}
-
-.nominee-secondary {
-    margin-top: 0.25rem;
-    opacity: 0.85;
-    font-size: 0.95rem;
-    line-height: 1.25;
-}
-
-.nominee.missing {
-    border-color: rgba(229, 9, 20, 0.35);
-    background: rgba(229, 9, 20, 0.10);
-}
-
-@media (max-width: 639px) {
-    .home {
-        padding: 1.25rem 0.9rem;
+@media (max-width: 760px) {
+    .progress-bar {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .home h1 {
-        font-size: 1.5rem;
-    }
-
-    .accordion-header {
-        padding: 0.85rem 0.9rem;
-    }
-
-    .accordion-panel {
-        padding: 0 0.9rem 0.9rem 0.9rem;
-    }
-
-    .nominee {
-        padding: 0.7rem 0.75rem;
+    .progress-actions {
+        justify-content: flex-start;
     }
 }
