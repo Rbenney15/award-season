@@ -1,9 +1,13 @@
-export async function searchMovies(query, page = 1) {
-  const url = new URL("/api/tmdb/search", window.location.origin);
-  url.searchParams.set("query", query);
-  url.searchParams.set("page", String(page));
+export const getPopularMovies = async () => {
+  const response = await fetch("/api/movies/popular");
+  if (!response.ok) throw new Error("Failed to fetch popular movies");
+  return response.json(); // already results array
+};
 
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error("Failed to search movies");
-  return res.json();
-}
+export const searchMovies = async (query) => {
+  const response = await fetch(
+    `/api/movies/search?query=${encodeURIComponent(query)}`,
+  );
+  if (!response.ok) throw new Error("Failed to search movies");
+  return response.json(); // already results array
+};
