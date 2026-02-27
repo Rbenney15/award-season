@@ -18,6 +18,10 @@ const picksKeyForUser = (userId) => `award_season_picks_${YEAR}_${userId}`;
 const finalizedKeyForUser = (userId) =>
   `award_season_finalized_${YEAR}_${userId}`;
 
+// Step 3 keys
+const winnersKey = `award_season_winners_${YEAR}`; // { [categoryId]: nominationId }
+const adminEnabledKey = `award_season_admin_enabled_${YEAR}`; // boolean
+
 function readJson(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -37,21 +41,30 @@ function Home() {
 
   const [activeUserId, setActiveUserId] = useState(USERS[0].id);
 
-  // ✅ picks for ACTIVE user only:
+  // picks for ACTIVE user only:
   // { [categoryId]: { want: string|null, will: string|null } }
   const [picksByCategory, setPicksByCategory] = useState({});
 
-  // ✅ finalized for ACTIVE user only:
+  // finalized for ACTIVE user only:
   const [isFinalized, setIsFinalized] = useState(false);
+
+  // Step 3: winners (global) + admin toggle
+  const [winnersByCategory, setWinnersByCategory] = useState({});
+  const [adminEnabled, setAdminEnabled] = useState(false);
 
   // prevents overwriting before first load
   const [hasLoadedUserState, setHasLoadedUserState] = useState(false);
+  const [hasLoadedWinners, setHasLoadedWinners] = useState(false);
 
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Step 2 UI state
   const [finalizeError, setFinalizeError] = useState(null);
   const [finalizeSuccess, setFinalizeSuccess] = useState(false);
+
+  // Step 3 UI state
+  const [showCongrats, setShowCongrats] = useState(false);
 
   // Load Oscars data
   useEffect(() => {
@@ -76,6 +89,29 @@ function Home() {
     const storedActiveUser = localStorage.getItem(ACTIVE_USER_KEY);
     if (storedActiveUser) setActiveUserId(storedActiveUser);
   }, []);
+
+  // Load winners + admin toggle once
+  useEffect(() => {
+    const storedWinners = readJson(winnersKey, {});
+    setWinnersByCategory(storedWinners);
+
+    const storedAdmin = readJson(adminEnabledKey, false);
+    setAdminEnabled(Boolean(storedAdmin));
+
+    setHasLoadedWinners(true);
+  }, []);
+
+  // Persist winners
+  useEffect(() => {
+    if (!hasLoadedWinners) return;
+    writeJson(winnersKey, winnersByCategory);
+  }, [winnersByCategory, hasLoadedWinners]);
+
+  // Persist admin toggle
+  useEffect(() => {
+    if (!hasLoadedWinners) return;
+    writeJson(adminEnabledKey, adminEnabled);
+  }, [adminEnabled, hasLoadedWinners]);
 
   // Whenever active user changes:
   // 1) persist active user id
@@ -207,6 +243,73 @@ function Home() {
     setIsFinalized(false);
   };
 
+  // --- Step 3: Admin winner entry ---
+  const setWinner = (categoryId, nominationId) => {
+    if (!adminEnabled) return;
+    setWinnersByCategory((prev) => ({
+      ...prev,
+      [categoryId]: prev[categoryId] === nominationId ? null : nominationId,
+    }));
+  };
+
+  const clearWinner = (categoryId) => {
+    if (!adminEnabled) return;
+    setWinnersByCategory((prev) => {
+      const next = { ...prev };
+      delete next[categoryId];
+      return next;
+    });
+  };
+
+  // --- Step 3: Leaderboard ---
+  const leaderboard = useMemo(() => {
+    if (!data?.categories) return [];
+
+    const rows = USERS.map((u) => {
+      const userPicks = readJson(picksKeyForUser(u.id), {});
+      let score = 0;
+
+      for (const cat of data.categories) {
+        const winnerNomId = winnersByCategory?.[cat.id];
+        if (!winnerNomId) continue; // not announced yet
+
+        const willPick = userPicks?.[cat.id]?.will ?? null;
+        if (willPick && willPick === winnerNomId) score += 1;
+      }
+
+      return { userId: u.id, name: u.name, score };
+    });
+
+    rows.sort((a, b) => b.score - a.score);
+    return rows;
+  }, [data, winnersByCategory]);
+
+  const winnersSoFar = useMemo(() => {
+    if (!data?.categories) return 0;
+    let count = 0;
+    for (const cat of data.categories) {
+      if (winnersByCategory?.[cat.id]) count += 1;
+    }
+    return count;
+  }, [data, winnersByCategory]);
+
+  const totalCategories = data?.categories?.length ?? 0;
+
+  const currentLeaders = useMemo(() => {
+    if (leaderboard.length === 0) return [];
+    const topScore = leaderboard[0].score;
+    if (topScore === 0) return []; // no meaningful leader yet
+    return leaderboard.filter((r) => r.score === topScore);
+  }, [leaderboard]);
+
+  // Show Congrats modal when ALL winners entered
+  useEffect(() => {
+    if (!totalCategories) return;
+    if (winnersSoFar === totalCategories && totalCategories > 0) {
+      setShowCongrats(true);
+    }
+  }, [winnersSoFar, totalCategories]);
+
   return (
     <div className="home">
       <div className="home-header">
@@ -238,10 +341,53 @@ function Home() {
               </option>
             ))}
           </select>
+
+          {/* Step 3: Admin toggle (temporary for v1) */}
+          <label className="admin-toggle">
+            <input
+              type="checkbox"
+              checked={adminEnabled}
+              onChange={(e) => setAdminEnabled(e.target.checked)}
+            />
+            Admin mode
+          </label>
         </div>
       </div>
 
-      {/* Progress + Finalize */}
+      {/* Step 3: Leaderboard */}
+      {!loading && !error && (
+        <div className="leaderboard">
+          <div className="leaderboard-top">
+            <div>
+              <strong>Leaderboard</strong>
+              <div className="leaderboard-sub">
+                Winners entered: {winnersSoFar}/{totalCategories}
+              </div>
+            </div>
+            {adminEnabled && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setShowCongrats(true)}
+                title="Test the congrats modal"
+              >
+                Test Congrats
+              </button>
+            )}
+          </div>
+
+          <ol className="leaderboard-list">
+            {leaderboard.map((row) => (
+              <li key={row.userId} className="leaderboard-row">
+                <span className="leaderboard-name">{row.name}</span>
+                <span className="leaderboard-score">{row.score}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* Step 2: Progress + Finalize */}
       {!loading && !error && (
         <div className="progress-bar">
           <div className="progress-left">
@@ -307,6 +453,7 @@ function Home() {
           {data?.categories?.map((cat) => {
             const isOpen = openCategoryId === cat.id;
             const picks = getCategoryPicks(cat.id);
+            const winnerNomId = winnersByCategory?.[cat.id] ?? null;
 
             return (
               <section
@@ -328,6 +475,10 @@ function Home() {
                     <span className={`pill ${picks.will ? "set" : ""}`}>
                       Will: {picks.will ? labelForNomination(picks.will) : "—"}
                     </span>
+                    <span className={`pill ${winnerNomId ? "winner" : ""}`}>
+                      Winner:{" "}
+                      {winnerNomId ? labelForNomination(winnerNomId) : "—"}
+                    </span>
                   </span>
 
                   <span className="accordion-indicator">
@@ -343,14 +494,21 @@ function Home() {
                         className="btn btn-secondary"
                         onClick={() => clearCategory(cat.id)}
                         disabled={isFinalized}
-                        title={
-                          isFinalized
-                            ? "Picks are finalized for this user"
-                            : "Clear Want + Will for this category"
-                        }
                       >
                         Clear picks
                       </button>
+
+                      {adminEnabled && (
+                        <button
+                          type="button"
+                          className="btn btn-secondary"
+                          onClick={() => clearWinner(cat.id)}
+                          style={{ marginLeft: "0.5rem" }}
+                          title="Clear winner for this category"
+                        >
+                          Clear winner
+                        </button>
+                      )}
                     </div>
 
                     <ul className="nominee-list">
@@ -372,12 +530,21 @@ function Home() {
 
                         const wantSelected = picks.want === nom.id;
                         const willSelected = picks.will === nom.id;
+                        const isWinner = winnerNomId === nom.id;
 
                         return (
-                          <li key={nom.id} className="nominee">
+                          <li
+                            key={nom.id}
+                            className={`nominee ${isWinner ? "winner" : ""}`}
+                          >
                             <div className="nominee-row">
                               <div className="nominee-text">
-                                <div className="nominee-primary">{primary}</div>
+                                <div className="nominee-primary">
+                                  {primary}{" "}
+                                  {isWinner ? (
+                                    <span className="winner-badge">WINNER</span>
+                                  ) : null}
+                                </div>
                                 {secondary ? (
                                   <div className="nominee-secondary">
                                     {secondary}
@@ -413,6 +580,20 @@ function Home() {
                                 >
                                   Will
                                 </button>
+
+                                {adminEnabled && (
+                                  <button
+                                    type="button"
+                                    className={`btn btn-pick ${
+                                      isWinner ? "selected winner" : ""
+                                    }`}
+                                    onClick={() => setWinner(cat.id, nom.id)}
+                                    aria-pressed={isWinner}
+                                    title="Set winner"
+                                  >
+                                    Winner
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </li>
@@ -424,6 +605,49 @@ function Home() {
               </section>
             );
           })}
+        </div>
+      )}
+
+      {/* Step 3: Congrats modal */}
+      {showCongrats && (
+        <div
+          className="modal-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Results"
+          onClick={() => setShowCongrats(false)}
+        >
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>🏆 Results</h2>
+
+            {currentLeaders.length === 0 ? (
+              <p>
+                Winners are in — but nobody has any correct “Will Win” picks
+                yet.
+              </p>
+            ) : currentLeaders.length === 1 ? (
+              <p>
+                Congrats <strong>{currentLeaders[0].name}</strong> — you got the
+                most correct! 🎉
+              </p>
+            ) : (
+              <p>
+                It’s a tie! Congrats{" "}
+                <strong>{currentLeaders.map((l) => l.name).join(", ")}</strong>{" "}
+                — you got the most correct! 🎉
+              </p>
+            )}
+
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setShowCongrats(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

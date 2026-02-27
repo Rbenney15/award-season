@@ -339,3 +339,123 @@
         max-width: 100%;
     }
 }
+/* Step 3: Leaderboard */
+.leaderboard {
+    margin-bottom: 0.85rem;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.leaderboard-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.leaderboard-sub {
+    margin-top: 0.25rem;
+    opacity: 0.85;
+    font-size: 0.92rem;
+}
+
+.leaderboard-list {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.leaderboard-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.leaderboard-name {
+    font-weight: 700;
+}
+
+.leaderboard-score {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.9;
+}
+
+/* Admin toggle */
+.admin-toggle {
+    margin-top: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.9;
+    font-size: 0.92rem;
+}
+
+/* Winner styling */
+.pill.winner {
+    border-color: rgba(255, 215, 0, 0.35);
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.nominee.winner {
+    border-color: rgba(255, 215, 0, 0.28);
+    background: rgba(255, 215, 0, 0.06);
+}
+
+.winner-badge {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    background: rgba(255, 215, 0, 0.12);
+    opacity: 0.95;
+}
+
+/* Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.modal {
+    width: min(520px, 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(20, 20, 20, 0.95);
+    padding: 1rem 1.1rem;
+}
+
+.modal h2 {
+    margin-top: 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+/* Winner button selected */
+.btn-pick.selected.winner {
+    outline: 2px solid rgba(255, 215, 0, 0.35);
+}
+
+@media (max-width: 760px) {
+    .leaderboard-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
